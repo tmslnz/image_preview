@@ -140,12 +140,14 @@
 			$new_settings['field-classes'] = 	( $settings['field-handles'] );
 
 			//var_dump(isset($settings['table-width']));die;
+			$new_settings['table-recipe'] = 	( isset($settings['table-recipe'])    ? $settings['table-recipe'] : NULL);
 			$new_settings['table-width'] = 		( isset($settings['table-width'])    ? $settings['table-width'] : NULL);
 			$new_settings['table-height'] = 	( isset($settings['table-height'])   ? $settings['table-height'] : NULL);
 			$new_settings['table-resize'] = 	( isset($settings['table-resize'])   ? $settings['table-resize'] : NULL);
 			$new_settings['table-position'] = 	( isset($settings['table-position']) ? $settings['table-position'] : NULL);
 			$new_settings['table-absolute'] = 	( isset($settings['table-absolute']) && $settings['table-absolute'] == 'on' ? 'yes' : 'no');
 
+			$new_settings['entry-recipe'] = 	( isset($settings['entry-recipe'])    ? $settings['entry-recipe'] : NULL);
 			$new_settings['entry-width'] = 		( isset($settings['entry-width'])    ? $settings['entry-width'] : NULL);
 			$new_settings['entry-height'] = 	( isset($settings['entry-height'])   ? $settings['entry-height'] : NULL);
 			$new_settings['entry-resize'] = 	( isset($settings['entry-resize'])   ? $settings['entry-resize'] : NULL);
@@ -171,11 +173,15 @@
 			}
 
 			foreach ($this->prefixes as $key => $prefix) {
+				$recipe = $this->get($prefix.'recipe');
 				$width = $this->get($prefix.'width');
 				$height = $this->get($prefix.'height');
 				$resize = $this->get($prefix.'resize');
 				$position = $this->get($prefix.'position');
 
+				if (!empty($recipe) && (!is_string($recipe))) {
+					$errors[$prefix.'recipe'] = __('Recipe must be a string');
+				}
 				if (!empty($width) && (!is_numeric($width) || intval($width) < 0)) {
 					$errors[$prefix.'width'] = __('Width must be a positive integer');
 				}
@@ -210,12 +216,14 @@
 			// declare an array contains the field's settings
 			$settings = array();
 
+			$t_recipe = $this->get('table-recipe');
 			$t_width = $this->get('table-width');
 			$t_height = $this->get('table-height');
 			$t_resize = $this->get('table-resize');
 			$t_position = $this->get('table-position');
 			$t_absolute = $this->get('table-absolute');
 
+			$e_recipe = $this->get('entry-recipe');
 			$e_width = $this->get('entry-width');
 			$e_height = $this->get('entry-height');
 			$e_resize = $this->get('entry-resize');
@@ -229,6 +237,7 @@
 			$settings['field-handles'] = $this->get('field-handles');
 
 			// the 'table' settings
+			$settings['table-recipe']    =  empty($t_recipe) ? NULL : $t_recipe;
 			$settings['table-width']    =  empty($t_width) ? NULL : $t_width;
 			$settings['table-height']   =  empty($t_height) ? NULL : $t_height;
 			$settings['table-resize']   =  empty($t_resize) ? NULL : $t_resize;
@@ -236,6 +245,7 @@
 			$settings['table-absolute'] =  empty($t_absolute) ? 'no' : $t_absolute;
 
 			// the 'entry' settings
+			$settings['entry-recipe']    =  empty($e_recipe) ? NULL : $e_recipe;
 			$settings['entry-width']    =  empty($e_width) ? NULL : $e_width;
 			$settings['entry-height']   =  empty($e_height) ? NULL : $e_height;
 			$settings['entry-resize']   =  empty($e_resize) ? NULL : $e_resize;
@@ -320,6 +330,7 @@
 			$params = new XMLElement('div');
 
 			$params->setAttribute('data-field-classes', $this->convertHandlesIntoIds($this->get('field-handles')));
+			$params->setAttribute('data-recipe',    $this->get('entry-recipe'));
 			$params->setAttribute('data-width',    $this->get('entry-width'));
 			$params->setAttribute('data-height',   $this->get('entry-height'));
 			$params->setAttribute('data-resize',   $this->get('entry-resize'));
@@ -349,6 +360,10 @@
 				$set_wrap = new XMLElement('div', NULL, array('class' => 'compact image_preview'));
 				$set_wrap->appendChild( new XMLElement('label', __($key . ' Preview settings')) );
 
+				/* new line, recipe */
+				$recipe_wrap = new XMLElement('div', NULL, array('class' => 'two columns'));
+				$recipe_wrap->appendChild($this->createInput('Recipe handle', $prefix.'recipe', $errors));
+
 				/* new line, width/height */
 				$wh_wrap = new XMLElement('div', NULL, array('class' => 'two columns'));
 				$wh_wrap->appendChild($this->createInput('Width <i>JIT image manipulation width parameter</i>', $prefix.'width', $errors));
@@ -367,6 +382,7 @@
 
 				/* append to wrapper */
 				$wrapper->appendChild($set_wrap);
+				$wrapper->appendChild($recipe_wrap);
 				$wrapper->appendChild($wh_wrap);
 				$wrapper->appendChild($rp_wrap);
 				$wrapper->appendChild($a_wrap);
@@ -438,6 +454,7 @@
 				}
 
 				$link->setAttribute('data-field-classes', $this->convertHandlesIntoIds($this->get('field-handles')));
+				$link->setAttribute('data-recipe',    $this->get('table-recipe'));
 				$link->setAttribute('data-width',    $this->get('table-width'));
 				$link->setAttribute('data-height',   $this->get('table-height'));
 				$link->setAttribute('data-resize',   $this->get('table-resize'));
@@ -510,11 +527,13 @@
 					`id` 				int(11) unsigned NOT NULL auto_increment,
 					`field_id` 			int(11) unsigned NOT NULL,
 					`field-handles`		varchar(255) NOT NULL,
+					`table-recipe` 		varchar(255) NULL,
 					`table-width` 		int(11) unsigned NULL,
 					`table-height` 		int(11) unsigned NULL,
 					`table-resize` 		int(11) unsigned NULL,
 					`table-position` 	int(11) unsigned NULL,
 					`table-absolute` 	enum('yes','no') NOT NULL DEFAULT 'no',
+					`entry-recipe` 		varchar(255) NULL,
 					`entry-width` 		int(11) unsigned NULL,
 					`entry-height` 		int(11) unsigned NULL,
 					`entry-resize` 		int(11) unsigned NULL,

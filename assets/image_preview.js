@@ -15,6 +15,7 @@
 	var selectors = '.field-upload .field-image_upload .field-uniqueupload .field-multilingual_upload_field .field-multilingual_image_upload'.split(' ');
 	
 	var defaultValues = {
+		recipe: false,
 		width: 40,
 		height: 0,
 		resize: 1,
@@ -33,7 +34,6 @@
 	var SVG = '.svg';
 	
 	var createUrl = function (imgSrc, params) {
-		
 		var newSrc = 'image/{resize}/{width}/{height}{position}';
 		
 		newSrc = newSrc.replace('{resize}', params.resize);
@@ -45,9 +45,17 @@
 			newSrc = imgSrc;
 		} else {
 			if (!!~imgSrc.indexOf(WORKSPACE)) {
-				newSrc = imgSrc.replace(WORKSPACE, newSrc);
+				if (params && params.recipe) {
+					newSrc = imgSrc.replace(WORKSPACE, 'image/' + params.recipe);
+				} else {
+					newSrc = imgSrc.replace(WORKSPACE, newSrc);
+				}
 			} else {
-				newSrc =  '/' + newSrc + imgSrc;
+				if (params && params.recipe) {
+					newSrc = '/image/' + params.recipe + imgSrc;
+				} else {
+					newSrc =  '/' + newSrc + imgSrc;
+				}
 			}
 		}
 		
@@ -68,12 +76,14 @@
 			if (!!node.length) {
 				
 				var 
+				recipe = node.attr('data-recipe'),
 				width = parseInt(node.attr('data-width'), 10),
 				height = parseInt(node.attr('data-height'), 10),
 				resize = parseInt(node.attr('data-resize'), 10),
 				position = parseInt(node.attr('data-position'), 10),
 				absolute = node.attr('data-absolute') == 'yes';
 				
+				params.recipe = recipe || false;
 				params.width = width || (!!height ? 0 : params.width);
 				params.height = height || (!!width ? 0 : params.height);
 				params.resize = resize || params.resize;
